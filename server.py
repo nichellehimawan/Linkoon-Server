@@ -26,7 +26,7 @@ def dmatch(donor, donor_request, recipients):
     matches = []
     for recipient in recipients:
         available_food = {"type 1": 0, "type 2": 0, "type 3": 0}
-        for index, need in enumerate(recipient["items"].values()):
+        for index, need in enumerate(recipient["items"]):
             for donation in donor_request:
                 if donation["type"] == need["type"]:
                     available_food[f"type {index+1}"] += int(donation["quantity"])
@@ -61,7 +61,7 @@ def rmatch(recipient, recipient_request, donors):
     for donor in donors:
         available_food = {"type 1": 0, "type 2": 0, "type 3": 0}
         for index, need in enumerate(recipient_request):
-            for donation in donor["items"].values():
+            for donation in donor["items"]:
                 if donation["type"] == need["type"]:
                     available_food[f"type {index+1}"] += int(donation["quantity"])
             if index == 0 or abs(available_food[f"type {index+1}"] - int(need["quantity"])) > maxdiff:
@@ -92,31 +92,37 @@ def rmatch(recipient, recipient_request, donors):
 
 @app.route('/match_donor', methods=['POST'])
 def match_donor():
-    donor = request.json
-    donors = fb.read('donorrequestdelivery')
-    for req in donors.values():
-        if req["user"] == donor["username"]:
-            donor_request = list(req["items"].values())
-            break
-    recipients = list(fb.read('recipientrequestdelivery').values())
-    new_matches = dmatch(donor, donor_request, recipients)
-    for match in new_matches:
-        fb.add("matches", match)
-    return "ok"
+    try:
+        donor = request.json
+        donors = fb.read('donorrequestdelivery')
+        for req in donors.values():
+            if req["user"] == donor["username"]:
+                donor_request = req["items"]
+                break
+        recipients = list(fb.read('recipientrequestdelivery').values())
+        new_matches = dmatch(donor, donor_request, recipients)
+        for match in new_matches:
+            fb.add("matches", match)
+        return "ok"
+    except AttributeError:
+        pass
 
 @app.route('/match_recipient', methods=['POST'])
 def match_recipient():
-    recipient = request.json
-    recipients = fb.read('recipientrequestdelivery')
-    for req in recipients.values():
-        if req["user"] == recipient["username"]:
-            recipient_request = list(req["items"].values())
-            break
-    donors = list(fb.read('donorrequestdelivery.json').values())
-    new_matches = rmatch(recipient, recipient_request, donors)
-    for match in new_matches:
-        fb.add("matches", match)
-    return "ok"
+    try:
+        recipient = request.json
+        recipients = fb.read('recipientrequestdelivery')
+        for req in recipients.values():
+            if req["user"] == recipient["username"]:
+                recipient_request = req["items"]
+                break
+        donors = list(fb.read('donorrequestdelivery.json').values())
+        new_matches = rmatch(recipient, recipient_request, donors)
+        for match in new_matches:
+            fb.add("matches", match)
+        return "ok"
+    except AttributeError:
+        pass
 
 if __name__ == '__main__':
     app.run(debug=True)
