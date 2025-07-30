@@ -18,9 +18,7 @@ plyer==2.1.0
 ptyprocess==0.7.0
 Pygments==2.18.0
 pypiwin32==223
-pywin32==308
 requests==2.32.3
 sh==2.2.2
 urllib3==2.2.3
-virtualenv==20.31.2
 Werkzeug==3.1.3
