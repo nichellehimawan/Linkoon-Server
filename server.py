@@ -116,7 +116,7 @@ def match_recipient():
             if req["user"] == recipient["username"]:
                 recipient_request = req["items"]
                 break
-        donors = list(fb.read('donorrequestdelivery.json').values())
+        donors = list(fb.read('donorrequestdelivery').values())
         new_matches = rmatch(recipient, recipient_request, donors)
         for match in new_matches:
             fb.add("matches", match)
