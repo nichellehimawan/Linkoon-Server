@@ -11,11 +11,6 @@ Flask==3.1.1
 idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.6
-Kivy==2.3.0
-kivy-deps.angle==0.4.0
-kivy-deps.glew==0.3.1
-kivy-deps.sdl2==0.7.0
-Kivy-Garden==0.1.5
 MarkupSafe==3.0.2
 pexpect==4.9.0
 platformdirs==4.3.8
