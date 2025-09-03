@@ -7,13 +7,24 @@ app = Flask(__name__)
 
 GMAPS_API_KEY = "AIzaSyCDeWKmcsH2TWVtaa2yFx02kGeQz-h6jVo"
 
-def linktocoords(link):
-    resp = requests.get(link, allow_redirects=True)
-    url = resp.url
-    after_at = url.split('@')[1]
-    coords = after_at.split('/')[0]
-    lat, lon = coords.split(',')[0:2]
+def geocode(link):
+    api = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {"address": link, "key": GMAPS_API_KEY}
+    resp = requests.get(api, params=params).json()
+    coords = resp['results'][0]['geometry']['location']
+    lat, lon = coords['lat'], coords['lng']
     return float(lat), float(lon)
+
+def linktocoords(link):
+    try:
+        resp = requests.get(link, allow_redirects=True)
+        url = resp.url
+        after_at = url.split('@')[1]
+        coords = after_at.split('/')[0]
+        lat, lon = coords.split(',')[0:2]
+        return float(lat), float(lon)
+    except (IndexError, ValueError):
+        return geocode(link)
 
 def get_distance(lat1, lon1, lat2, lon2):
     api = "https://maps.googleapis.com/maps/api/directions/json"
@@ -105,7 +116,7 @@ def match_donor():
             fb.add("matches", match)
         return "ok"
     except AttributeError:
-        pass
+        return "ok"
 
 @app.route('/match_recipient', methods=['POST'])
 def match_recipient():
@@ -122,7 +133,7 @@ def match_recipient():
             fb.add("matches", match)
         return "ok"
     except AttributeError:
-        pass
+        return "ok"
 
 if __name__ == '__main__':
     app.run(debug=True)
