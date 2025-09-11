@@ -2,29 +2,39 @@ from flask import Flask, request, jsonify
 import json
 import requests
 import firebase_controls as fb
+import re
 
 app = Flask(__name__)
 
 GMAPS_API_KEY = "AIzaSyCDeWKmcsH2TWVtaa2yFx02kGeQz-h6jVo"
 
-def geocode(link):
-    api = "https://maps.googleapis.com/maps/api/geocode/json"
-    params = {"address": link, "key": GMAPS_API_KEY}
-    resp = requests.get(api, params=params).json()
-    coords = resp['results'][0]['geometry']['location']
-    lat, lon = coords['lat'], coords['lng']
-    return float(lat), float(lon)
+def expand_link(link):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    session = requests.Session()
+    resp = session.get(link, headers=headers, allow_redirects=True, timeout=10)
+    return resp.url
 
 def linktocoords(link):
     try:
-        resp = requests.get(link, allow_redirects=True)
-        url = resp.url
-        after_at = url.split('@')[1]
-        coords = after_at.split('/')[0]
-        lat, lon = coords.split(',')[0:2]
+        url = expand_link(link)
+
+        if '@' in url:
+            after_at = url.split('@')[1]
+            coords = after_at.split('/')[0]
+            lat, lon = coords.split(',')[0:2]
+            return float(lat), float(lon)
+
+        match = re.search(r'!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)', url)
+        lat, lon = match.groups()
         return float(lat), float(lon)
     except (IndexError, ValueError):
-        return geocode(link)
+        print("could not get coordinates")
+        return None
 
 def get_distance(lat1, lon1, lat2, lon2):
     api = "https://maps.googleapis.com/maps/api/directions/json"
