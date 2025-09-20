@@ -3,6 +3,7 @@ import json
 import requests
 import firebase_controls as fb
 import re
+import math
 
 app = Flask(__name__)
 
@@ -35,12 +36,38 @@ def linktocoords(link):
     except (IndexError, ValueError):
         print("could not get coordinates")
         return None
+    
+def distance_matrix(lat1, lon1, lat2, lon2):
+    api = "https://maps.googleapis.com/maps/api/distancematrix/json"
+    params = {"origins": f"{lat1},{lon1}", "destinations": f"{lat2},{lon2}", "key": GMAPS_API_KEY}
+    resp = requests.get(api, params=params).json()
+    try:
+        element = resp['rows'][0]['elements'][0]
+        if element['status'] == "OK":
+            return element['distance']['value'] / 1000
+        else:
+            print("Distance Matrix Status: ", element['status'])
+            return None
+    except Exception as e:
+        print("Error in parsing Distance Matrix: ", e)
+        return None
+    
+def haversine_distance(lat1, lon1, lat2, lon2):
+    R = 6371
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+
+    a = math.sin(dphi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
 
 def get_distance(lat1, lon1, lat2, lon2):
-    api = "https://maps.googleapis.com/maps/api/directions/json"
-    params = {"origin": f"{lat1},{lon1}", "destination": f"{lat2},{lon2}", "key": GMAPS_API_KEY}
-    resp = requests.get(api, params=params).json()
-    distance_km = resp['routes'][0]['legs'][0]['distance']['value'] / 1000
+    distance_km = distance_matrix(lat1, lon1, lat2, lon2)
+    if distance_km is not None:
+        return distance_km
+    distance_km = haversine_distance(lat1, lon1, lat2, lon2)
     return distance_km
 
 def dmatch(donor, donor_request, recipients):
