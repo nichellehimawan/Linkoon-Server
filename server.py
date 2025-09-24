@@ -73,7 +73,7 @@ def get_distance(lat1, lon1, lat2, lon2):
 def dmatch(donor, donor_request, recipients):
     matches = []
     for recipient in recipients:
-        available_items = {"type 1": 0, "type 2": 0, "type 3": 0, "type 4": 0, "type 5": 0, "type 6": 0, "type 7": 0, "type 8": 0, "type 9": 0, "type 10": 0}
+        available_items = {"type 1": 0, "type 2": 0, "type 3": 0}
         for index, need in enumerate(recipient["items"]):
             for donation in donor_request:
                 if donation["type"] == need["type"]:
@@ -107,7 +107,7 @@ def dmatch(donor, donor_request, recipients):
 def rmatch(recipient, recipient_request, donors):
     matches = []
     for donor in donors:
-        available_items = {"type 1": 0, "type 2": 0, "type 3": 0, "type 4": 0, "type 5": 0, "type 6": 0, "type 7": 0, "type 8": 0, "type 9": 0, "type 10": 0}
+        available_items = {"type 1": 0, "type 2": 0, "type 3": 0}
         for index, need in enumerate(recipient_request):
             for donation in donor["items"]:
                 if donation["type"] == need["type"]:
@@ -116,10 +116,7 @@ def rmatch(recipient, recipient_request, donors):
                 maxdiff = abs(available_items[f"type {index+1}"] - int(need["quantity"]))
         if len(matches) == 0 or maxdiff < matches[0]["maxdiff"]:
             rlat, rlon = linktocoords(recipient["gmaps"])
-            for user in fb.read("donors").values():
-                if user["username"] == donor["user"]:
-                    dlat, dlon = linktocoords(user["gmaps"])
-                    break
+            dlat, dlon = linktocoords(donor["gmaps"])
             distance = get_distance(dlat, dlon, rlat, rlon)
             new_match = {"donor": donor["user"], 
                          "recipient": recipient["username"], 
